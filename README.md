@@ -45,24 +45,57 @@ figure renderers and the assumption-ledger functions).
 
 ## How to install it in Claude Science
 
-These are Claude Science customizations, authored and installed programmatically
-through the platform's `customize` capability (the `host.agents.*` and
-`host.skills.*` SDK). To recreate them in your own Claude Science organization,
-ask your Claude Science agent to:
+You do **not** need to be technical to install this. Pick whichever route fits.
 
-1. **Create the three skills.** For each folder under `skills/`, create a skill
-   of the same name and write its `SKILL.md` and `kernel.py` verbatim, then
-   publish it.
-2. **Create the agent profile.** Using `agent/profile.json` for the metadata and
-   `agent/system_prompt.md` for the identity, create a profile named
-   `PATIENT_ORG_NAVIGATOR` with full catalog + connector access (unrestricted),
-   so it can reach the whole scientific data catalog (PubMed, ClinicalTrials.gov,
-   human-genetics, and the rest) as an organization's focus demands.
-3. **(Optional) Set up an environment** named `patient-org-navigator` with
-   `pandas`, `numpy`, `matplotlib`, and `seaborn` for the figure renderers.
+### Easiest — paste one prompt to your Claude Science agent
 
-The skill `SKILL.md` and `kernel.py` files are plain text and self-documenting;
-they are the authoritative source.
+Open a Claude Science conversation and paste this, verbatim:
+
+> Please install the Patient Organization Navigator from this GitHub repo:
+> https://github.com/ruthannepai-tech/patient-organization-navigator
+> Clone or download it, then run `install.py` from the repo root in the repl
+> tool with `exec(open("install.py").read())`. It will create and publish the
+> three skills and create the `PATIENT_ORG_NAVIGATOR` agent profile with full
+> access. Then create its environment and offer to switch me to it.
+
+Your agent handles the rest. When it finishes, the **Patient Organization
+Navigator** appears in your agent picker.
+
+### One command — if you already have the repo
+
+From the root of this repository, in the Claude Science **repl** tool:
+
+```python
+exec(open("install.py").read())
+```
+
+`install.py` reads the definitions in this repo and installs everything —
+publishing all three skills and creating the agent profile with full catalog +
+connector access (so it can reach PubMed, ClinicalTrials.gov, human-genetics,
+and the rest of the scientific data catalog). It is **idempotent**: safe to
+re-run, and it updates in place if you already have an older version installed.
+
+It finishes by printing the one optional tool call to set up the figure-render
+environment:
+
+```python
+manage_environments(mode='create', name='patient-org-navigator',
+    packages=['pandas','numpy','matplotlib','seaborn'], python_version='3.13')
+```
+
+and the command to switch your conversation to the new specialist:
+
+```python
+host.agents.switch('PATIENT_ORG_NAVIGATOR')
+```
+
+### Manual — if you prefer to do it by hand
+
+The `SKILL.md` and `kernel.py` files are plain text and self-documenting, and
+`agent/profile.json` + `agent/system_prompt.md` fully define the agent. Ask your
+Claude Science agent to create a skill per folder under `skills/` (writing each
+`SKILL.md` and `kernel.py` verbatim, then publishing), and to create an
+unrestricted profile named `PATIENT_ORG_NAVIGATOR` from the `agent/` files.
 
 ## Design commitments (baked into the engine)
 
