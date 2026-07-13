@@ -30,6 +30,31 @@ def _repo_root():
         "(the folder containing agent/profile.json and skills/).")
 
 
+_PKGMAP = {"numpy": "numpy", "pandas": "pandas", "matplotlib": "matplotlib",
+           "seaborn": "seaborn", "scipy": "scipy", "sklearn": "scikit-learn",
+           "PIL": "pillow", "networkx": "networkx", "requests": "requests",
+           "yaml": "pyyaml"}
+
+
+def _env_slug(agent_name):
+    return agent_name.lower().replace("_", "-")
+
+
+def _scan_packages(skills_dir):
+    """Third-party packages imported by the bundled kernel.py files."""
+    import re
+    found = set()
+    for base, _, files in os.walk(skills_dir):
+        for f in files:
+            if f == "kernel.py":
+                src = open(os.path.join(base, f)).read()
+                for m in re.findall(r'^\s*(?:import|from)\s+([A-Za-z_][\w]*)',
+                                     src, re.M):
+                    if m in _PKGMAP:
+                        found.add(_PKGMAP[m])
+    return sorted(found) or ["pandas", "numpy", "matplotlib", "seaborn"]
+
+
 def _put_file(host, skill, path, content):
     """Create the file, or replace it if it already exists (idempotent)."""
     try:
@@ -49,13 +74,24 @@ def install(host):
 
     for s in skills:
         sd = os.path.join(skills_dir, s)
-        md = open(os.path.join(sd, "SKILL.md")).read()
-        _put_file(host, s, "SKILL.md", md)
-        kp = os.path.join(sd, "kernel.py")
-        if os.path.isfile(kp):
-            _put_file(host, s, "kernel.py", open(kp).read())
+        # Publish EVERY file in the skill dir (SKILL.md, kernel.py, assets/,
+        # templates/, references/, scripts/, ...), preserving sub-paths.
+        n = 0
+        for base, _, files in os.walk(sd):
+            for f in files:
+                if f == ".catalog_stamp":
+                    continue
+                fp = os.path.join(base, f)
+                rel = os.path.relpath(fp, sd).replace(os.sep, "/")
+                try:
+                    content = open(fp, encoding="utf-8").read()
+                except UnicodeDecodeError:
+                    import base64 as _b64
+                    content = _b64.b64encode(open(fp, "rb").read()).decode()
+                _put_file(host, s, rel, content)
+                n += 1
         host.skills.publish(s, overwrite=True)
-        print("  published skill:", s)
+        print("  published skill: %s (%d files)" % (s, n))
 
     # --- Agent profile ---
     prof = json.load(open(os.path.join(root, "agent", "profile.json")))
@@ -80,10 +116,12 @@ def install(host):
         )
         print("  created agent:", name, "(full access)")
 
+    env = _env_slug(name)
+    pkgs = _scan_packages(skills_dir)
     print("\nDone. The '%s' specialist is now in your agent picker." % prof["displayName"])
     print("\nOptional — create its analysis environment (run as a tool call):")
-    print("  manage_environments(mode='create', name='patient-org-navigator',")
-    print("      packages=['pandas','numpy','matplotlib','seaborn'], python_version='3.13')")
+    print("  manage_environments(mode='create', name='%s'," % env)
+    print("      packages=%r, python_version='3.13')" % pkgs)
     print("\nThen switch to it:  host.agents.switch('%s')" % name)
     return name
 
