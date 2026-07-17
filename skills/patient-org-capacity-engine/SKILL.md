@@ -60,7 +60,26 @@ Loading this skill runs `kernel.py`. Available immediately:
 - `build_manifest(profile, path="capacity_manifest.json")` — collect all stages,
   outputs, branches, and open assumptions into one manifest.
 
-`BRANCHES` (dict) and `MATURITY_TIERS` (list) are module constants you can read.
+**Deliverable rendering** (needs `python-docx` and `matplotlib` — create
+a small env with these and pass `environment=` on the `python` calls):
+
+- `docx_new(title, subtitle)` → house-style Word doc; then `docx_heading`,
+  `docx_body`, `docx_bullets`, `docx_callout(text, heading)` (amber demo-note /
+  assumption box), `docx_table(headers, rows, colwidths)`,
+  `docx_figure(doc, png_path, width, caption)`, `docx_footer`, and
+  `md_to_docx(doc, markdown)` to pour an existing markdown branch doc into Word.
+  `doc.save("Name.docx")` then `save_artifacts` it. **Always render deliverables
+  as .docx AND keep the markdown/JSON** — the Word files are what a non-technical
+  board edits in Google Drive; the md/json stay as artifacts for follow-up.
+- `build_capacity_model(nodes)` → validate a capacity→strategy dependency model
+  (see Branch F below); `render_unlock_map(model, path, title)` → the
+  capacity→unlock figure.
+- `render_roadmap_views(options, which="both"|"effort"|"timeline", path_prefix)`
+  → render the SAME options as an effort-tier menu and/or a calendar timeline;
+  `which` follows the leader's Stage-0 roadmap-structure choice.
+
+`BRANCHES` (dict), `MATURITY_TIERS` (list), `POSTURE_COLORS`, `NODE_KIND_COLORS`,
+and `HORIZON_TO_PHASE` are module constants you can read.
 
 ## Stage 0 — Discovery interview (always first)
 
@@ -80,6 +99,14 @@ Use `ask_user` (one call per question, or grouped tabs) to learn, at minimum:
 - **Risk appetite & constraints** — conservative stress-test vs. momentum
   narrative; any hard constraints (no wet-lab, global-equity priority, etc.).
 - **What they want from this engagement** — the single most important question.
+- **Preferred roadmap structure** — how the leader wants the capacity summary
+  framed. Offer as an `ask_user`: an **effort-tier menu** (options grouped by
+  cost/capacity, low-cost-first — "what can we afford now"); a **time-phased
+  plan** (0-12 mo / 1-2 yr / 2-5 yr — "what happens when"); **both**; or a
+  **dependency-driven** sequence (ordered by what unlocks what). Store it in
+  discovery (e.g. `roadmap_structure`) and pass it through to
+  `render_roadmap_views(..., which=...)` at deliverable time. Different boards
+  think differently; this is the leader's call, not yours.
 
 Record answers with `record_discovery`. Where the leader does not know or defers,
 **log an assumption** rather than inventing a fact, and note you will revisit it.
@@ -109,7 +136,20 @@ Present `BRANCHES` as an `ask_user` multi-select. Do not pre-select. The menu:
   off-label access, centers-of-care networks, payer/HTA evidence.
 - **F · capacity** — organizational capacity & funding. Gap map across the
   full patient journey, peer-organization model bank, and gaps×levers×horizon
-  options tiered by cost. Composes `capacity-gap-roadmap`.
+  options tiered by cost. Composes `capacity-gap-roadmap`. **Always include the
+  capacity→strategy dependency layer:** model the roadmap as a graph where
+  capacity/personnel investments UNLOCK downstream scientific/therapeutic steps,
+  so the leader sees the value chain, not a flat list. Add the people/capacity
+  nodes explicitly — e.g. a (fractional) Scientific Director/CSO hire in yr 1-2
+  unlocks sponsor & academic partnerships (trial-readiness package, PRO program,
+  fundraising) in yr 2-5; a Development Director hire unlocks a preclinical fund
+  → preclinical study; a structured registry is the foundation later infra and
+  studies build on. Build it with `build_capacity_model(nodes)` (each node:
+  id, label, kind ∈ {capacity, infrastructure, science, therapeutic, advocacy,
+  funding}, effort H1/H2/H3, phase P1/P2/P3, cost, builds_on[], unlocks[]) and
+  render with `render_unlock_map(model, ...)`. Ground each node in the org's
+  real assets and the retrieved landscape; keep speculative unlocks as clearly
+  labeled options.
 
 Record with `select_branches`. Most engagements run **F (capacity) as the
 integrating spine** plus one or two others the leader prioritizes. Confirm the
@@ -136,8 +176,20 @@ Never assert a clinical or wet-lab result as fact — carry it as an open questi
 Every deliverable (report, figure caption, site page) **opens with the
 assumption block** (`assumptions_markdown`) and a one-line framing: *prepared
 for the leader's review; options tiered by cost, sequenced low-cost-first; a
-first draft to cut, reorder, and correct — not a prescription.* Call
-`build_manifest` to record the full set. Offer the leader the manifest and a
+first draft to cut, reorder, and correct — not a prescription.*
+
+**Render in two layers.** Patient-org leaders and their boards are usually
+non-technical: markdown and JSON are not accessible to them. For the master
+summary AND each branch, produce an **editable Word (.docx)** document (house
+style via `docx_new` + helpers; embed the figures; open with the demo/assumption
+callout) that they can drop into Google Drive and edit — while ALSO keeping the
+markdown/JSON as artifacts for follow-up work here. Use the leader's Stage-0
+`roadmap_structure` choice to decide which roadmap view(s) to render
+(`render_roadmap_views(..., which=...)`), and include the Branch-F
+capacity→strategy unlock map. Save every .docx and every figure with
+`save_artifacts`.
+
+Call `build_manifest` to record the full set. Offer the leader the manifest and a
 short list of the highest-value pieces of information that, if they shared it,
 would let you retire the biggest assumptions.
 
