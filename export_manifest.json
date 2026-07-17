@@ -2,8 +2,8 @@
   "agent": "PATIENT_ORG_NAVIGATOR",
   "skills": {
     "patient-org-capacity-engine": {
-      "SKILL.md": 9252,
-      "kernel.py": 7447
+      "SKILL.md": 12838,
+      "kernel.py": 23575
     },
     "disease-landscape-timeline": {
       "SKILL.md": 4366,
