@@ -43,6 +43,27 @@ figure renderers and the assumption-ledger functions).
 | **disease-landscape-timeline** | Renders a single figure answering "where has this field been, and where is it now?" across five tracks — Science, Regulatory, Natural history/infrastructure, Pipeline, Patient voice — with every milestone grounded in a retrieved source. |
 | **capacity-gap-roadmap** | Builds a patient-journey gap inventory (seven stages), a peer-organization model bank scaled to the org's size, and a phased roadmap of options tiered by cost and sequenced low-cost-first, classified by posture (amplify / revive / connect / build-via-partner). |
 
+## Recent additions
+
+The **patient-org-capacity-engine** now also:
+
+- **Renders every deliverable as an editable Word (`.docx`) document** in a
+  consistent house style (embedded figures, an assumption/demo callout box),
+  alongside the markdown/JSON — so a non-technical board can open and edit the
+  files in Google Drive while the structured artifacts remain for follow-up.
+- **Lets the leader choose how the roadmap is framed** — an effort-tier menu
+  (options grouped by cost/capacity, low-cost-first), a time-phased plan
+  (0–12 mo / 1–2 yr / 2–5 yr), both, or a dependency-driven sequence. The
+  choice is captured in the Stage 0 discovery interview and threaded through to
+  render time.
+- **Shows how capacity investments unlock strategy** — Branch F models the
+  roadmap as a dependency graph where people/infrastructure investments (e.g. a
+  Scientific Director hire, a structured registry) unlock downstream scientific
+  and therapeutic steps, rendered as a left-to-right unlock map.
+
+These renderers need `python-docx` and `matplotlib` in the engagement
+environment (add `python-docx` to the packages list when creating the env).
+
 ## How to install it in Claude Science
 
 You do **not** need to be technical to install this. Pick whichever route fits.
